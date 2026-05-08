@@ -35,9 +35,9 @@ function Get-ServerExecutableCandidates {
     )
 
     return @(
-        (Join-Path $InstallPath "ConanSandboxServer.exe"),
         (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Shipping.exe"),
-        (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Test.exe")
+        (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Test.exe"),
+        (Join-Path $InstallPath "ConanSandboxServer.exe")
     )
 }
 

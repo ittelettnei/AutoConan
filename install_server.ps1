@@ -29,6 +29,10 @@ $workshopScriptPath = Join-Path $steamPath "update-conan-mods.txt"
 $configRoot = Join-Path $gameFilesPath "ConanSandbox\Saved\Config\WindowsServer"
 $engineIniPath = Join-Path $configRoot "Engine.ini"
 $serverSettingsPath = Join-Path $configRoot "ServerSettings.ini"
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$defaultConfigRoot = Join-Path $scriptRoot "defaults\ConanSandbox\Saved\Config\WindowsServer"
+$defaultEngineIniPath = Join-Path $defaultConfigRoot "Engine.ini"
+$defaultServerSettingsPath = Join-Path $defaultConfigRoot "ServerSettings.ini"
 $steamCmdWasDownloaded = $false
 
 function Get-ServerExecutableCandidates {
@@ -37,9 +41,9 @@ function Get-ServerExecutableCandidates {
     )
 
     return @(
-        (Join-Path $InstallPath "ConanSandboxServer.exe"),
         (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Shipping.exe"),
-        (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Test.exe")
+        (Join-Path $InstallPath "ConanSandbox\Binaries\Win64\ConanSandboxServer-Win64-Test.exe"),
+        (Join-Path $InstallPath "ConanSandboxServer.exe")
     )
 }
 
@@ -130,6 +134,20 @@ function Ensure-ServerConfigExists {
     }
 }
 
+function Copy-DefaultConfigFile {
+    param(
+        [Parameter(Mandatory)][string]$SourcePath,
+        [Parameter(Mandatory)][string]$DestinationPath
+    )
+
+    if (-not (Test-Path $SourcePath)) {
+        return $false
+    }
+
+    Copy-Item -Path $SourcePath -Destination $DestinationPath -Force
+    return $true
+}
+
 function Get-IniValue {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -164,7 +182,13 @@ function Set-IniValue {
         [Parameter(Mandatory)][AllowEmptyString()][string]$Value
     )
 
-    $lines = if (Test-Path $Path) { [System.Collections.Generic.List[string]](Get-Content -Path $Path) } else { [System.Collections.Generic.List[string]]::new() }
+    $lines = [System.Collections.Generic.List[string]]::new()
+    if (Test-Path $Path) {
+        foreach ($line in @(Get-Content -Path $Path)) {
+            $lines.Add([string]$line)
+        }
+    }
+
     $sectionHeader = "[$Section]"
     $sectionStart = -1
     $sectionEnd = $lines.Count
@@ -304,6 +328,20 @@ if ($instanceAlreadyInitialized -and $AllowExistingInstanceInstall -and -not $Up
 }
 
 if ($shouldConfigureServerDescription) {
+    $copiedDefaultFiles = @()
+
+    if (Copy-DefaultConfigFile -SourcePath $defaultEngineIniPath -DestinationPath $engineIniPath) {
+        $copiedDefaultFiles += "Engine.ini"
+    }
+
+    if (Copy-DefaultConfigFile -SourcePath $defaultServerSettingsPath -DestinationPath $serverSettingsPath) {
+        $copiedDefaultFiles += "ServerSettings.ini"
+    }
+
+    if ($copiedDefaultFiles.Count -gt 0) {
+        Write-Host "> Applied default config template from $defaultConfigRoot: $($copiedDefaultFiles -join ', ')"
+    }
+
     $configProcess = Start-ConanServer -InstallPath $gameFilesPath
 
     Start-Sleep -Seconds 5

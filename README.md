@@ -26,7 +26,7 @@ The old one-off updater is kept in old_backup\ for reference only. The root scri
 
 ## What Each Script Does
 
-- install_server.ps1: Creates the instance folder structure, installs SteamCMD, installs or updates the Conan Exiles dedicated server, boots the server once if needed to generate the WindowsServer ini files, writes ServerName and ServerPassword into Engine.ini, and ensures the server process is running at the end.
+- install_server.ps1: Creates the instance folder structure, installs SteamCMD, installs or updates the Conan Exiles dedicated server, boots the server once if needed to generate the WindowsServer ini files, copies the repo default Engine.ini and ServerSettings.ini templates when installing or when -UpdateExistingConfig is used, writes ServerName and ServerPassword into Engine.ini, and ensures the server process is running at the end.
 - backup_save.ps1: Refuses to back up a running instance and zips ConanSandbox\Saved into the instance backup folder.
 - update_modules.ps1: Stops only the selected instance if it is running, runs backup_save.ps1, updates the server with SteamCMD, optionally syncs workshop mods when an update-conan-mods.txt script exists, and starts the instance again in background mode if it was running before the update.
 - start_server.ps1: Starts one instance by triggering its scheduled start task.
@@ -53,6 +53,7 @@ Notes:
 - InstanceName is required.
 - ServerName is mandatory. If omitted, PowerShell prompts before install work starts.
 - ServerPassword is mandatory so PowerShell prompts before install work starts, but it may be left blank to create a server without a password.
+- Default Conan config templates are stored under defaults\ConanSandbox\Saved\Config\WindowsServer and are currently sourced from C:\ConanServer.
 - install_server.ps1 guards against accidental second runs:
   - By default, if the instance already exists, the script aborts before making changes.
   - Use -AllowExistingInstanceInstall only when you intentionally want to rerun install or update steps.
@@ -135,7 +136,7 @@ It does not remove the shared NightlyRestart task.
 
 ## Operational Notes
 
-- The installer writes ServerName and ServerPassword to ConanSandbox\Saved\Config\WindowsServer\Engine.ini under the OnlineSubsystem section. Leave ServerPassword blank if you want no server password.
+- The installer seeds ConanSandbox\Saved\Config\WindowsServer\Engine.ini and ServerSettings.ini from the repo templates under defaults\ConanSandbox\Saved\Config\WindowsServer, then writes ServerName and ServerPassword to Engine.ini under the OnlineSubsystem section. Leave ServerPassword blank if you want no server password.
 - The updater only performs workshop sync when update-conan-mods.txt exists under the instance steamcmd folder.
 - Workshop sync copies .pak files into ConanSandbox\Mods and will regenerate modlist.txt when DedicatedServerLauncherModList is present in ServerSettings.ini.
 - These scripts intentionally keep server install paths instance-specific so multiple Conan Exiles instances can coexist on the same host.
