@@ -305,10 +305,10 @@ if (-not $installSucceeded) {
 
 if ($CreateWorkshopScript -and -not (Test-Path $workshopScriptPath)) {
     @(
-        "+force_install_dir $modCachePath",
-        "+login anonymous",
+        "force_install_dir $modCachePath",
+        "login anonymous",
         "; add workshop_download_item 440900 <modId> validate commands here",
-        "+quit"
+        "quit"
     ) | Set-Content -Path $workshopScriptPath -Encoding ASCII
 
     Write-Host "> Created workshop script template at $workshopScriptPath"
@@ -339,7 +339,7 @@ if ($shouldConfigureServerDescription) {
     }
 
     if ($copiedDefaultFiles.Count -gt 0) {
-        Write-Host "> Applied default config template from $defaultConfigRoot: $($copiedDefaultFiles -join ', ')"
+        Write-Host ("> Applied default config template from {0} ({1})" -f $defaultConfigRoot, ($copiedDefaultFiles -join ', '))
     }
 
     $configProcess = Start-ConanServer -InstallPath $gameFilesPath
